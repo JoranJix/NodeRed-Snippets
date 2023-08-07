@@ -1,0 +1,294 @@
+[
+    {
+        "id": "ced4cf966568dab9",
+        "type": "inject",
+        "z": "99f6cfdbf054c46b",
+        "name": "",
+        "props": [
+            {
+                "p": "payload"
+            }
+        ],
+        "repeat": "",
+        "crontab": "",
+        "once": false,
+        "onceDelay": 0.1,
+        "topic": "",
+        "payload": "0",
+        "payloadType": "str",
+        "x": 170,
+        "y": 220,
+        "wires": [
+            [
+                "ef5b4a597f101f9a",
+                "4231d423449a75f1",
+                "30fa9a823535c6f9",
+                "c45f177109c5accc",
+                "cf720743fd64559a",
+                "81a7ba8591b4ac72",
+                "5d6f6aded7fa7a2e"
+            ]
+        ]
+    },
+    {
+        "id": "287665c1281d2909",
+        "type": "configurable interval",
+        "z": "99f6cfdbf054c46b",
+        "name": "configurable interval",
+        "interval": "30",
+        "onstart": false,
+        "do_enable": true,
+        "msg": "0",
+        "showstatus": true,
+        "unit": "seconds",
+        "statusformat": "YYYY-MM-D HH:mm:ss",
+        "x": 120,
+        "y": 300,
+        "wires": [
+            [
+                "5d6f6aded7fa7a2e"
+            ]
+        ]
+    },
+    {
+        "id": "5d6f6aded7fa7a2e",
+        "type": "http request",
+        "z": "99f6cfdbf054c46b",
+        "name": "",
+        "method": "GET",
+        "ret": "txt",
+        "paytoqs": "ignore",
+        "url": "https://api.wheretheiss.at/v1/satellites/25544",
+        "tls": "",
+        "persist": false,
+        "proxy": "",
+        "insecureHTTPParser": false,
+        "authType": "",
+        "senderr": false,
+        "headers": [],
+        "x": 450,
+        "y": 300,
+        "wires": [
+            [
+                "1db197436d86e7f9"
+            ]
+        ]
+    },
+    {
+        "id": "1db197436d86e7f9",
+        "type": "json",
+        "z": "99f6cfdbf054c46b",
+        "name": "",
+        "property": "payload",
+        "action": "",
+        "pretty": false,
+        "x": 690,
+        "y": 300,
+        "wires": [
+            [
+                "cf120a168cf92ca1",
+                "c6d63851b4cf7240",
+                "bc1b76e745f805af",
+                "30d6055a2b5bc35e",
+                "2e428b0358314384",
+                "0a63dce24b0c185e"
+            ]
+        ]
+    },
+    {
+        "id": "30d6055a2b5bc35e",
+        "type": "function",
+        "z": "99f6cfdbf054c46b",
+        "name": "Generate Flight Data ISS",
+        "func": "// ISS Tracking\nvar issLatitude = msg.payload.latitude; // Breitengrad der ISS\nvar issLongitude = msg.payload.longitude; // Längengrad der ISS\nvar yourLatitude = 51.4; // Hier musst du deine Breitengrad-Koordinate eintragen\nvar yourLongitude = 7.2; // Hier musst du deine Längengrad-Koordinate eintragen\nvar notificationDistance = 1000; // Schwellenwert in Kilometern, du kannst diesen Wert anpassen\n\n// Funktion, um die Distanz zwischen zwei Koordinaten zu berechnen (Haversine-Formel)\nfunction getDistanceFromLatLonInKm(lat1, lon1, lat2, lon2) {\n    var R = 6371; // Radius der Erde in Kilometern\n    var dLat = deg2rad(lat2 - lat1);\n    var dLon = deg2rad(lon2 - lon1);\n    var a =\n        Math.sin(dLat / 2) * Math.sin(dLat / 2) +\n        Math.cos(deg2rad(lat1)) * Math.cos(deg2rad(lat2)) *\n        Math.sin(dLon / 2) * Math.sin(dLon / 2);\n    var c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));\n    var distance = R * c;\n    return distance;\n}\n\nfunction deg2rad(deg) {\n    return deg * (Math.PI / 180);\n}\n\n// Berechne die Distanz zwischen der ISS und deinem Standort\nvar distanceToISS = getDistanceFromLatLonInKm(issLatitude, issLongitude, yourLatitude, yourLongitude);\nconst newMsg1 = {\n    payload: distanceToISS,\n    topic: \"issdistance\" // Setze das gewünschte Topic für die Objekte im Array\n};\nnode.send(newMsg1);\n// Wenn die ISS in der Nähe ist, sende eine Benachrichtigung\nif (distanceToISS <= notificationDistance) {\n    const newMsg = {\n        payload: distanceToISS,\n        topic: \"issoverhead\" // Setze das gewünschte Topic für die Objekte im Array\n    };\n    node.send(newMsg);\n}\n\n// Weitere Verarbeitung der ISS-Daten (falls erforderlich)\nvar flight = {\n    \"name\": msg.payload.name,\n    \"lat\": msg.payload.latitude,\n    \"lon\": msg.payload.longitude,\n    \"speed\": msg.payload.velocity,\n    \"label\": msg.payload.name,\n    \"icon\": \"satellite\",\n    \"tooltip\": msg.payload.visibility\n};\n\nnode.send({ payload: flight, topic: \"issdata\" });",
+        "outputs": 1,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 750,
+        "y": 500,
+        "wires": [
+            [
+                "562c308036e56664"
+            ]
+        ]
+    },
+    {
+        "id": "562c308036e56664",
+        "type": "switch",
+        "z": "99f6cfdbf054c46b",
+        "name": "",
+        "property": "topic",
+        "propertyType": "msg",
+        "rules": [
+            {
+                "t": "eq",
+                "v": "issdistance",
+                "vt": "str"
+            },
+            {
+                "t": "eq",
+                "v": "issdata",
+                "vt": "str"
+            }
+        ],
+        "checkall": "true",
+        "repair": false,
+        "outputs": 2,
+        "x": 690,
+        "y": 540,
+        "wires": [
+            [
+                "e1d46d52f1220698",
+                "83396d86dd84177e",
+                "03bac232919c6448",
+                "6b8ac1aa242bddc6"
+            ],
+            [
+                "7acd8130567766f8",
+                "773cf5e6a77e41bf"
+            ]
+        ]
+    },
+    {
+        "id": "03bac232919c6448",
+        "type": "switch",
+        "z": "99f6cfdbf054c46b",
+        "name": "",
+        "property": "payload",
+        "propertyType": "msg",
+        "rules": [
+            {
+                "t": "lt",
+                "v": "500",
+                "vt": "num"
+            },
+            {
+                "t": "gt",
+                "v": "500",
+                "vt": "num"
+            }
+        ],
+        "checkall": "true",
+        "repair": false,
+        "outputs": 2,
+        "x": 690,
+        "y": 700,
+        "wires": [
+            [
+                "dbc897a40b712aa0"
+            ],
+            [
+                "cdf002060cd7f6ef"
+            ]
+        ]
+    },
+    {
+        "id": "dbc897a40b712aa0",
+        "type": "change",
+        "z": "99f6cfdbf054c46b",
+        "name": "",
+        "rules": [
+            {
+                "t": "set",
+                "p": "payload",
+                "pt": "msg",
+                "to": "true",
+                "tot": "bool"
+            }
+        ],
+        "action": "",
+        "property": "",
+        "from": "",
+        "to": "",
+        "reg": false,
+        "x": 850,
+        "y": 680,
+        "wires": [
+            [
+                "1ce765aa8d9900fe",
+                "61d2bebe85475102"
+            ]
+        ]
+    },
+    {
+        "id": "cdf002060cd7f6ef",
+        "type": "change",
+        "z": "99f6cfdbf054c46b",
+        "name": "",
+        "rules": [
+            {
+                "t": "set",
+                "p": "payload",
+                "pt": "msg",
+                "to": "false",
+                "tot": "bool"
+            }
+        ],
+        "action": "",
+        "property": "",
+        "from": "",
+        "to": "",
+        "reg": false,
+        "x": 850,
+        "y": 720,
+        "wires": [
+            [
+                "1ce765aa8d9900fe",
+                "96ea5c907b3ec79d"
+            ]
+        ]
+    },
+    {
+        "id": "1ce765aa8d9900fe",
+        "type": "ui_led",
+        "z": "99f6cfdbf054c46b",
+        "order": 2,
+        "group": "74794894829ad549",
+        "width": 0,
+        "height": 0,
+        "label": "ISS Overhead",
+        "labelPlacement": "left",
+        "labelAlignment": "left",
+        "colorForValue": [
+            {
+                "color": "#ff0000",
+                "value": "false",
+                "valueType": "bool"
+            },
+            {
+                "color": "#008000",
+                "value": "true",
+                "valueType": "bool"
+            }
+        ],
+        "allowColorForValueInMessage": false,
+        "shape": "circle",
+        "showGlow": true,
+        "name": "ISS",
+        "x": 1030,
+        "y": 700,
+        "wires": []
+    },
+    {
+        "id": "74794894829ad549",
+        "type": "ui_group",
+        "name": "ISS",
+        "tab": "7ca2b58ac7022ce9",
+        "order": 3,
+        "disp": true,
+        "width": "6",
+        "collapse": false,
+        "className": ""
+    },
+    {
+        "id": "7ca2b58ac7022ce9",
+        "type": "ui_tab",
+        "name": "Sky",
+        "icon": "fa-rocket",
+        "order": 1,
+        "disabled": false,
+        "hidden": false
+    }
+]
