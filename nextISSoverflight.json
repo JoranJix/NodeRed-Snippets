@@ -1,0 +1,155 @@
+[
+    {
+        "id": "dc85e4ef4c90791a",
+        "type": "ui_text",
+        "z": "99f6cfdbf054c46b",
+        "group": "74794894829ad549",
+        "order": 1,
+        "width": 0,
+        "height": 0,
+        "name": "",
+        "label": "Nächster Überflug ISS",
+        "format": "{{msg.payload}}",
+        "layout": "col-center",
+        "className": "",
+        "x": 1140,
+        "y": 300,
+        "wires": []
+    },
+    {
+        "id": "0a63dce24b0c185e",
+        "type": "function",
+        "z": "99f6cfdbf054c46b",
+        "name": "function 4",
+        "func": "var issData = msg.payload;\n\n// Deine Standortkoordinaten\nvar yourLatitude = 51.4;\nvar yourLongitude = 7.2;\n\n// Umrechnung der Geschwindigkeit in Kilometer pro Sekunde\nvar velocityKmps = issData.velocity / 3600;\n\n// Distanz zwischen ISS und deinem Standort in Kilometern\nvar distance = calculateDistance(yourLatitude, yourLongitude, issData.latitude, issData.longitude);\n\n// Geschätzte Zeit bis zum Überflug in Sekunden\nvar estimatedTime = distance / velocityKmps;\n\n// Aktuelle Zeit in Sekunden seit 1970 (Unix-Zeit)\nvar currentTime = Math.floor(Date.now() / 1000);\n\n// Geschätzte Zeit des Überflugs als Unix-Zeitstempel\nvar estimatedPassTime = currentTime + estimatedTime;\n\n// Konvertiere den Unix-Zeitstempel in eine lesbare Uhrzeit\nvar passTime = new Date(estimatedPassTime * 1000).toLocaleTimeString();\n\nmsg.payload = passTime;\n\nreturn msg;\n\n// Funktion zur Berechnung der Entfernung zwischen zwei Koordinaten\nfunction calculateDistance(lat1, lon1, lat2, lon2) {\n    var R = 6371; // Erdradius in Kilometern\n    var dLat = degToRad(lat2 - lat1);\n    var dLon = degToRad(lon2 - lon1);\n    var a =\n        Math.sin(dLat / 2) * Math.sin(dLat / 2) +\n        Math.cos(degToRad(lat1)) * Math.cos(degToRad(lat2)) *\n        Math.sin(dLon / 2) * Math.sin(dLon / 2);\n    var c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));\n    var distance = R * c;\n    return distance;\n}\n\n// Konvertiere Grad in Radianten\nfunction degToRad(deg) {\n    return deg * (Math.PI / 180);\n}",
+        "outputs": 1,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 920,
+        "y": 300,
+        "wires": [
+            [
+                "1e1f1d363c55090c",
+                "dc85e4ef4c90791a"
+            ]
+        ]
+    },
+    {
+        "id": "1db197436d86e7f9",
+        "type": "json",
+        "z": "99f6cfdbf054c46b",
+        "name": "",
+        "property": "payload",
+        "action": "",
+        "pretty": false,
+        "x": 690,
+        "y": 300,
+        "wires": [
+            [
+                "cf120a168cf92ca1",
+                "c6d63851b4cf7240",
+                "bc1b76e745f805af",
+                "30d6055a2b5bc35e",
+                "2e428b0358314384",
+                "0a63dce24b0c185e"
+            ]
+        ]
+    },
+    {
+        "id": "5d6f6aded7fa7a2e",
+        "type": "http request",
+        "z": "99f6cfdbf054c46b",
+        "name": "",
+        "method": "GET",
+        "ret": "txt",
+        "paytoqs": "ignore",
+        "url": "https://api.wheretheiss.at/v1/satellites/25544",
+        "tls": "",
+        "persist": false,
+        "proxy": "",
+        "insecureHTTPParser": false,
+        "authType": "",
+        "senderr": false,
+        "headers": [],
+        "x": 450,
+        "y": 300,
+        "wires": [
+            [
+                "1db197436d86e7f9"
+            ]
+        ]
+    },
+    {
+        "id": "287665c1281d2909",
+        "type": "configurable interval",
+        "z": "99f6cfdbf054c46b",
+        "name": "configurable interval",
+        "interval": "30",
+        "onstart": false,
+        "do_enable": true,
+        "msg": "0",
+        "showstatus": true,
+        "unit": "seconds",
+        "statusformat": "YYYY-MM-D HH:mm:ss",
+        "x": 120,
+        "y": 300,
+        "wires": [
+            [
+                "5d6f6aded7fa7a2e"
+            ]
+        ]
+    },
+    {
+        "id": "ced4cf966568dab9",
+        "type": "inject",
+        "z": "99f6cfdbf054c46b",
+        "name": "",
+        "props": [
+            {
+                "p": "payload"
+            }
+        ],
+        "repeat": "",
+        "crontab": "",
+        "once": false,
+        "onceDelay": 0.1,
+        "topic": "",
+        "payload": "0",
+        "payloadType": "str",
+        "x": 170,
+        "y": 220,
+        "wires": [
+            [
+                "ef5b4a597f101f9a",
+                "4231d423449a75f1",
+                "30fa9a823535c6f9",
+                "c45f177109c5accc",
+                "cf720743fd64559a",
+                "81a7ba8591b4ac72",
+                "5d6f6aded7fa7a2e"
+            ]
+        ]
+    },
+    {
+        "id": "74794894829ad549",
+        "type": "ui_group",
+        "name": "ISS",
+        "tab": "7ca2b58ac7022ce9",
+        "order": 3,
+        "disp": true,
+        "width": "6",
+        "collapse": false,
+        "className": ""
+    },
+    {
+        "id": "7ca2b58ac7022ce9",
+        "type": "ui_tab",
+        "name": "Sky",
+        "icon": "fa-rocket",
+        "order": 1,
+        "disabled": false,
+        "hidden": false
+    }
+]
